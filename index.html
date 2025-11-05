@@ -256,7 +256,7 @@
     <section id="sec-ajustes" class="section">
       <div class="card">
         <h2>Ajustes</h2>
-        <p class="hint">Opcional: conecta con Firebase/Firestore para sincronización multiusuario. Pega tu config y activa.</p>
+        <p class="hint">Firestore está activado por código con tu configuración.</p>
         <div class="grid">
           <label>Config Firebase (JSON)</label>
           <textarea id="firebase-config" placeholder='{"apiKey":"…","authDomain":"…","projectId":"…",…}'></textarea>
@@ -269,41 +269,20 @@
       </div>
       <div class="card">
         <h2>Acerca de</h2>
-        <p>Versión 1.0 · Local‑first · Sin frameworks · Hecho para operar en terreno.</p>
+        <p>Versión 1.0 · Local-first · Sin frameworks · Hecho para operar en terreno.</p>
       </div>
     </section>
 
   </main>
 
+  <!-- Tu app -->
   <script type="module" src="./app.js"></script>
+
+  <!-- SW solo en https o localhost -->
   <script>
-    // Registrar SW solo en https o localhost
     if ((location.protocol === 'https:' || location.hostname === 'localhost') && 'serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(console.error);
     }
   </script>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyBOoHRADT4yOCpytPvcyHcaWSB1pT2ZB8I",
-    authDomain: "asignadortablet.firebaseapp.com",
-    projectId: "asignadortablet",
-    storageBucket: "asignadortablet.firebasestorage.app",
-    messagingSenderId: "261128444351",
-    appId: "1:261128444351:web:996b8a3171da8d20f6e90a",
-    measurementId: "G-5F1JBEVC5S"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
 </body>
 </html>
