@@ -81,43 +81,42 @@ const get = (store,key)=> new Promise((res,rej)=>{ const r=tx(store).get(key); r
 const put = (store,obj)=> new Promise((res,rej)=>{ const r=tx(store,'readwrite').put(obj); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error)});
 const del = (store,key)=> new Promise((res,rej)=>{ const r=tx(store,'readwrite').delete(key); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error)});
 
-// ---------- (Opcional) Firestore Sync ----------
-let USE_FIREBASE = false; // cambia a true tras activar
-let firebaseCfg = null;
-let fb = null, auth=null, fs=null;
+// ---------- Firestore (ONLINE) ----------
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, collection as coll, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-async function tryEnableFirebase(){
+let USE_FIREBASE = false;
+let fbApp = null, auth = null, fs = null;
+
+// TU CONFIG (la misma que pegaste en index antes)
+const firebaseConfig = {
+  apiKey: "AIzaSyBOoHRADT4yOCpytPvcyHcaWSB1pT2ZB8I",
+  authDomain: "asignadortablet.firebaseapp.com",
+  projectId: "asignadortablet",
+  storageBucket: "asignadortablet.firebasestorage.app",
+  messagingSenderId: "261128444351",
+  appId: "1:261128444351:web:996b8a3171da8d20f6e90a"
+};
+
+async function enableFirebase(){
   try{
-    const cfgRaw = localStorage.getItem('firebaseConfig');
-    if(!cfgRaw){ $('#firebase-status').textContent='Sin configuración'; return; }
-    firebaseCfg = JSON.parse(cfgRaw);
-    // Carga SDK desde CDN solo si hace falta
-    const appMod = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-    const authMod = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
-    const fsMod = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-
-    fb = appMod.initializeApp(firebaseCfg);
-    auth = authMod.getAuth(fb);
-    fs = fsMod.getFirestore(fb);
-    await fsMod.enableIndexedDbPersistence(fs).catch(()=>{});
-
-    // Login anónimo por simplicidad
-    await authMod.signInAnonymously(auth);
-
+    fbApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    fs = getFirestore(fbApp);
+    auth = getAuth(fbApp);
+    try { await signInAnonymously(auth); } 
+    catch(e){ /* Si "Sign-in anónimo" no está habilitado, igual seguiremos si las reglas lo permiten */ }
     USE_FIREBASE = true;
-    $('#firebase-status').textContent='Firestore activo (login anónimo)';
+    $('#firebase-status')?.textContent = `Firestore activo (proyecto: ${firebaseConfig.projectId})`;
   }catch(e){
     console.error(e);
-    $('#firebase-status').textContent='Error activando Firestore';
-    USE_FIREBASE = false;
+    $('#firebase-status')?.textContent = 'Error activando Firestore';
   }
 }
 
-// Helper para sincronizar una escritura local hacia Firestore (demo)
-async function syncWrite(collection, key, data){
+async function syncWrite(collectionName, key, data){
   if(!USE_FIREBASE) return;
-  const { doc, setDoc, collection: coll } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-  await setDoc(doc(coll(fs, collection), key), data, { merge:true });
+  await setDoc(doc(coll(fs, collectionName), key), data, { merge:true });
 }
 
 // ---------- UI POBLADO SELECTS ----------
@@ -242,7 +241,6 @@ async function renderAsignaciones(){
 
 // ---------- Eventos: CRUD maestros ----------
 document.addEventListener('click', async (e)=>{
-  // Deletes delegados
   const imei = e.target?.dataset?.delTablet;
   if(imei){
     if(!confirm('Eliminar tablet '+imei+'?')) return;
@@ -274,8 +272,9 @@ $('#btn-add-tablet')?.addEventListener('click', async ()=>{
   const modelo = $('#tab-modelo').value.trim();
   const nota = $('#tab-nota').value.trim();
   if(isEmpty(imei)) return alert('IMEI requerido');
-  await put('tablets', { imei, modelo, provisional:true, estado:'disponible', nota });
-  await syncWrite('tablets', imei, { imei, modelo, provisional:true, estado:'disponible', nota });
+  const obj = { imei, modelo, provisional:true, estado:'disponible', nota };
+  await put('tablets', obj);
+  await syncWrite('tablets', imei, obj);
   $('#tab-imei').value=''; $('#tab-modelo').value=''; $('#tab-nota').value='';
   await renderTablets(); await refreshMasterSelects();
 });
@@ -284,8 +283,9 @@ $('#btn-add-conductor')?.addEventListener('click', async ()=>{
   const rut = $('#con-rut').value.trim();
   const nombre = $('#con-nombre').value.trim();
   if(isEmpty(rut) || isEmpty(nombre)) return alert('RUT y Nombre son requeridos');
-  await put('conductores', { rut, nombre });
-  await syncWrite('conductores', rut, { rut, nombre });
+  const obj = { rut, nombre };
+  await put('conductores', obj);
+  await syncWrite('conductores', rut, obj);
   $('#con-rut').value=''; $('#con-nombre').value='';
   await renderConductores(); await refreshMasterSelects();
 });
@@ -294,8 +294,9 @@ $('#btn-add-veh')?.addEventListener('click', async ()=>{
   const patente = ($('#veh-patente').value||'').trim().toUpperCase();
   const sigla = ($('#veh-sigla').value||'').trim();
   if(isEmpty(patente)) return alert('Patente requerida');
-  await put('vehiculos', { patente, sigla });
-  await syncWrite('vehiculos', patente, { patente, sigla });
+  const obj = { patente, sigla };
+  await put('vehiculos', obj);
+  await syncWrite('vehiculos', patente, obj);
   $('#veh-patente').value=''; $('#veh-sigla').value='';
   await renderVehiculos(); await refreshMasterSelects();
 });
@@ -305,8 +306,9 @@ $('#btn-add-sim')?.addEventListener('click', async ()=>{
   const iccid = onlyDigits($('#sim-iccid').value);
   const simImei = onlyDigits($('#sim-imei').value);
   if(isEmpty(numero)) return alert('Número SIM requerido');
-  await put('sims', { numero, iccid, simImei });
-  await syncWrite('sims', numero, { numero, iccid, simImei });
+  const obj = { numero, iccid, simImei };
+  await put('sims', obj);
+  await syncWrite('sims', numero, obj);
   $('#sim-numero').value=''; $('#sim-iccid').value=''; $('#sim-imei').value='';
   await renderSims(); await refreshMasterSelects();
 });
@@ -333,14 +335,13 @@ $('#btn-crear-asig')?.addEventListener('click', async ()=>{
     simNumero: red==='SIM'? $('#asig-sim-numero').value : '',
     simIccid: red==='SIM'? onlyDigits($('#asig-sim-iccid').value) : '',
     simImei: red==='SIM'? onlyDigits($('#asig-sim-imei').value) : '',
-    entregadoEn: nowISO(), devueltoEn: null, estado:'Entregado', observacion: obs, creadoPor: 'local'
+    entregadoEn: nowISO(), devueltoEn: null, estado:'Entregado', observacion: obs, creadoPor: 'web'
   };
   await put('asignaciones', asig);
   await put('tablets', { ...tab, estado:'asignada' });
   await syncWrite('asignaciones', asig.id, asig);
   await syncWrite('tablets', tab.imei, { ...tab, estado:'asignada' });
 
-  // limpiar
   $('#asig-tablet-imei').value=''; $('#asig-obs').value='';
   await renderAsignaciones(); await renderTablets();
 });
@@ -387,7 +388,6 @@ document.getElementById('btn-export')?.addEventListener('click', async ()=>{
 // ---------- Escáner (opcional con https) ----------
 async function scanOnce(){
   try{
-    // Carga ZXing dinámicamente
     const { BrowserMultiFormatReader } = await import('https://unpkg.com/@zxing/library@0.20.0/esm/index.js');
     const codeReader = new BrowserMultiFormatReader();
     const devices = await codeReader.listVideoInputDevices();
@@ -421,13 +421,13 @@ document.getElementById('scan-sim-master')?.addEventListener('click', async ()=>
   ensurePreview(); const t = await scanOnce(); if(t) $('#sim-iccid').value = onlyDigits(t);
 });
 
-// ---------- Ajustes Firebase ----------
+// ---------- Ajustes Firebase (opcional UI) ----------
 document.getElementById('btn-guardar-config')?.addEventListener('click', ()=>{
   const txt = $('#firebase-config').value.trim();
   try{ JSON.parse(txt); localStorage.setItem('firebaseConfig', txt); alert('Config guardada'); }
   catch{ alert('JSON inválido'); }
 });
-document.getElementById('btn-activar-firebase')?.addEventListener('click', ()=>{ tryEnableFirebase(); });
+document.getElementById('btn-activar-firebase')?.addEventListener('click', ()=>{ enableFirebase(); });
 
 // ---------- Init ----------
 (async function init(){
@@ -436,5 +436,7 @@ document.getElementById('btn-activar-firebase')?.addEventListener('click', ()=>{
   await Promise.all([renderTablets(), renderConductores(), renderVehiculos(), renderSims(), renderAsignaciones()]);
   await refreshMasterSelects();
   $('#sim-block').style.display = ($('#asig-red').value==='SIM') ? 'grid' : 'none';
-  if(localStorage.getItem('firebaseConfig')) $('#firebase-status').textContent='Config presente (no activo)';
+
+  // Firestore ONLINE activado por defecto
+  await enableFirebase();
 })();
