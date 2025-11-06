@@ -43,12 +43,18 @@
     .section{display:none}
     .section.active{display:block}
     .danger{color:#fecaca}
+    .dot{display:inline-block;width:10px;height:10px;border-radius:999px;margin-left:8px;background:#7f1d1d;box-shadow:0 0 0 2px #1e293b}
+    .dot.ok{background:#10b981}   
+    .dot.bad{background:#ef4444}
   </style>
 </head>
 <body>
   <header>
     <div class="wrap">
-      <h1>Asignador de Tablets <span class="muted">· PWA</span></h1>
+      <h1>
+        Asignador de Tablets <span class="muted">· PWA</span>
+        <span id="fb-dot" class="dot" title="Firestore: desconectado"></span>
+      </h1>
       <nav id="tabs"></nav>
     </div>
   </header>
@@ -112,10 +118,11 @@
           </div>
         </div>
         <div class="card">
-          <div class="toolbar">
+         <div class="toolbar">
             <h2 style="margin-right:auto">Asignaciones activas</h2>
             <input id="filtro" placeholder="Buscar patente/IMEI/RUT" />
             <button id="btn-export" class="btn">⬇ Exportar CSV</button>
+            <button id="sync-asignaciones" class="btn">⤴ Reenviar</button>
           </div>
           <div style="overflow:auto">
             <table id="tabla-asignaciones">
@@ -168,6 +175,7 @@
           <h2>Tablets registradas</h2>
           <div class="toolbar">
             <input id="filtro-tablets" placeholder="Buscar IMEI/Modelo" />
+            <button id="sync-tablets" class="btn">⤴ Reenviar a Firestore</button>
           </div>
           <div style="overflow:auto"><table id="tabla-tablets"><thead><tr><th>IMEI</th><th>Modelo</th><th>Estado</th><th>Nota</th><th></th></tr></thead><tbody></tbody></table></div>
         </div>
@@ -192,7 +200,9 @@
         </div>
         <div class="card">
           <h2>Conductores</h2>
-          <div class="toolbar"><input id="filtro-conductores" placeholder="Buscar RUT/Nombre" /></div>
+          <div class="toolbar"><input id="filtro-conductores" placeholder="Buscar RUT/Nombre" />
+            <button id="sync-conductores" class="btn">⤴ Reenviar</button>
+          </div>
           <div style="overflow:auto"><table id="tabla-conductores"><thead><tr><th>RUT</th><th>Nombre</th><th></th></tr></thead><tbody></tbody></table></div>
         </div>
       </div>
@@ -216,7 +226,10 @@
         </div>
         <div class="card">
           <h2>Vehículos</h2>
-          <div class="toolbar"><input id="filtro-vehiculos" placeholder="Buscar Patente/Sigla" /></div>
+          <div class="toolbar">
+            <input id="filtro-vehiculos" placeholder="Buscar Patente/Sigla" />
+            <button id="sync-vehiculos" class="btn">⤴ Reenviar</button>
+          </div>
           <div style="overflow:auto"><table id="tabla-vehiculos"><thead><tr><th>Patente</th><th>Sigla</th><th></th></tr></thead><tbody></tbody></table></div>
         </div>
       </div>
@@ -247,7 +260,10 @@
         </div>
         <div class="card">
           <h2>SIMs</h2>
-          <div class="toolbar"><input id="filtro-sims" placeholder="Buscar Número/ICCID" /></div>
+          <div class="toolbar">
+            <input id="filtro-sims" placeholder="Buscar Número/ICCID" />
+            <button id="sync-sims" class="btn">⤴ Reenviar</button>
+          </div>
           <div style="overflow:auto"><table id="tabla-sims"><thead><tr><th>Número</th><th>ICCID</th><th>IMEI SIM</th><th></th></tr></thead><tbody></tbody></table></div>
         </div>
       </div>
