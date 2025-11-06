@@ -277,7 +277,39 @@
 
   <!-- Tu app -->
   <script type="module" src="./app.js"></script>
+  <script type="module">
+  import { getApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getFirestore, collection, doc, setDoc, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
+  const fs = getFirestore(getApp());
+
+  // UI de debug
+  document.body.insertAdjacentHTML(
+    "beforeend",
+    `<div style="margin:16px">
+       <button id="dbg-write" class="btn">TEST FIRESTORE</button>
+       <span id="dbg-out" class="hint"></span>
+     </div>`
+  );
+
+  document.getElementById("dbg-write").onclick = async () => {
+    const out = document.getElementById("dbg-out");
+    out.textContent = "Escribiendo…";
+    try {
+      await setDoc(doc(collection(fs, "pruebas"), "ping"), {
+        ok: true, fuente: "debug", ts: serverTimestamp()
+      }, { merge: true });
+      out.textContent = "✅ OK. Revisa colección 'pruebas' en Firestore.";
+    } catch (e) {
+      out.textContent = "❌ " + (e.code || e.message);
+      console.error(e);
+    }
+  };
+</script>
+
+
+  
   <!-- SW solo en https o localhost -->
   <script>
     if ((location.protocol === 'https:' || location.hostname === 'localhost') && 'serviceWorker' in navigator) {
