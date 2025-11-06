@@ -86,6 +86,38 @@ import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebase
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, collection as coll, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
+let FB_CONNECTED = false;  // estado visual del puntito
+
+function setFbDot(ok, msg=""){
+  const dot = document.getElementById('fb-dot');
+  const lbl = document.getElementById('firebase-status');
+  FB_CONNECTED = !!ok;
+  if(dot){
+    dot.classList.toggle('ok', ok);
+    dot.classList.toggle('bad', !ok);
+    dot.title = ok ? "Firestore: conectado" : "Firestore: desconectado";
+  }
+  if(lbl && msg) lbl.textContent = msg; // opcional, conserva tu texto
+}
+
+// “ping” al servidor sin escribir datos (si offline lanza error)
+async function pingFirestore(){
+  if(!USE_FIREBASE){ setFbDot(false, "Firestore OFF"); return; }
+  try{
+    const { getDocFromServer, doc, collection: coll } =
+      await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
+    // Podemos consultar un doc inexistente; igual contacta al servidor
+    await getDocFromServer(doc(coll(fs, "__health"), "ping"));
+    setFbDot(true);
+  }catch(e){
+    setFbDot(false);
+  }
+}
+
+// reacciona a cambios de red del navegador
+window.addEventListener('online',  ()=> pingFirestore());
+window.addEventListener('offline', ()=> setFbDot(false));
+
 let USE_FIREBASE = false;
 let fbApp = null, auth = null, fs = null;
 
@@ -107,6 +139,10 @@ async function enableFirebase(){
     try { await signInAnonymously(auth); } 
     catch(e){ /* Si "Sign-in anónimo" no está habilitado, igual seguiremos si las reglas lo permiten */ }
     USE_FIREBASE = true;
+    setFbDot(true, `Firestore activo (proyecto: ${firebaseConfig.projectId || firebaseCfg?.projectId})`);
+    pingFirestore();
+    setInterval(pingFirestore, 15000); // comprueba cada 15 s
+
     $('#firebase-status')?.textContent = `Firestore activo (proyecto: ${firebaseConfig.projectId})`;
   }catch(e){
     console.error(e);
@@ -115,11 +151,42 @@ async function enableFirebase(){
 }
 
 async function syncWrite(collectionName, key, data){
-  if(!USE_FIREBASE) return;
-  await setDoc(doc(coll(fs, collectionName), key), data, { merge:true });
+  if(!USE_FIREBASE){ console.warn("Firestore OFF"); return; }
+  try{
+    const { collection: coll, doc, setDoc } =
+      await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
+    await setDoc(doc(coll(fs, collectionName), key), data, { merge:true });
+    console.log(`Firestore OK → ${collectionName}/${key}`);
+  }catch(e){
+    console.error("Firestore ERR:", e);
+    alert("Error Firestore: " + (e.code || e.message));
+  }
 }
 
+
 // ---------- UI POBLADO SELECTS ----------
+
+async function resendStore(storeName, collectionName, keyField){
+  if(!USE_FIREBASE){ alert("Firestore no está activo"); return; }
+  const items = await getAll(storeName);
+  const { collection: coll, doc, setDoc } =
+    await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
+
+  let ok = 0, fail = 0;
+  for(const it of items){
+    const key = it[keyField];
+    if(!key) continue;
+    try{
+      await setDoc(doc(coll(fs, collectionName), key), it, { merge:true });
+      ok++;
+    }catch(e){
+      console.error("Resend fail", collectionName, key, e);
+      fail++;
+    }
+  }
+  alert(`Reenvío ${collectionName}: OK ${ok}, errores ${fail}`);
+}
+
 async function refreshMasterSelects(){
   const [vehiculos, conductores, sims] = await Promise.all([
     getAll('vehiculos'), getAll('conductores'), getAll('sims')
@@ -421,6 +488,23 @@ document.getElementById('scan-sim-master')?.addEventListener('click', async ()=>
   ensurePreview(); const t = await scanOnce(); if(t) $('#sim-iccid').value = onlyDigits(t);
 });
 
+document.getElementById('sync-tablets')?.addEventListener('click', ()=>{
+  resendStore('tablets', 'tablets', 'imei');
+});
+document.getElementById('sync-conductores')?.addEventListener('click', ()=>{
+  resendStore('conductores', 'conductores', 'rut');
+});
+document.getElementById('sync-vehiculos')?.addEventListener('click', ()=>{
+  resendStore('vehiculos', 'vehiculos', 'patente');
+});
+document.getElementById('sync-sims')?.addEventListener('click', ()=>{
+  resendStore('sims', 'sims', 'numero');
+});
+document.getElementById('sync-asignaciones')?.addEventListener('click', ()=>{
+  resendStore('asignaciones', 'asignaciones', 'id');
+});
+
+
 // ---------- Ajustes Firebase (opcional UI) ----------
 document.getElementById('btn-guardar-config')?.addEventListener('click', ()=>{
   const txt = $('#firebase-config').value.trim();
@@ -439,4 +523,7 @@ document.getElementById('btn-activar-firebase')?.addEventListener('click', ()=>{
 
   // Firestore ONLINE activado por defecto
   await enableFirebase();
+  pingFirestore();            // estado inicial del puntito
+  setInterval(pingFirestore, 15000);
+
 })();
