@@ -2,7 +2,7 @@
 // app.js — lógica de la app
 // ==========================
 
-// ---------- Utilidades, este es un comentario ----------
+// ---------- Utilidades ----------
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
 const nowISO = () => new Date().toISOString();
