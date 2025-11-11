@@ -115,31 +115,33 @@ async function pingFirestore(){
 window.addEventListener('online',  ()=> pingFirestore());
 window.addEventListener('offline', ()=> setFbDot(false));
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBOoHRADT4yOCpytPvcyHcaWSB1pT2ZB8I",
-  authDomain: "asignadortablet.firebaseapp.com",
-  projectId: "asignadortablet",
-  storageBucket: "asignadortablet.firebasestorage.app",
-  messagingSenderId: "261128444351",
-  appId: "1:261128444351:web:996b8a3171da8d20f6e90a"
-};
-
 async function enableFirebase(){
   try{
-    fbApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const cfg = loadFirebaseConfig();
+    if (!cfg) {
+      setFbDot(false, 'Sin configuración Firebase');
+      $('#firebase-status')?.textContent = 'Sin configuración Firebase';
+      return;
+    }
+
+    fbApp = getApps().length ? getApp() : initializeApp(cfg);
     fs = getFirestore(fbApp);
     auth = getAuth(fbApp);
-    try{ await signInAnonymously(auth); }catch(_){} // si no está habilitado, seguimos
+    try { await signInAnonymously(auth); } catch(e) { /* seguimos si las reglas lo permiten */ }
+
     USE_FIREBASE = true;
-    setFbDot(true, `Firestore activo (proyecto: ${firebaseConfig.projectId})`);
+    setFbDot(true, `Firestore activo (proyecto: ${cfg.projectId})`);
+    $('#firebase-status')?.textContent = `Firestore activo (proyecto: ${cfg.projectId})`;
+
     pingFirestore();
     setInterval(pingFirestore, 15000);
-    $('#firebase-status')?.textContent = `Firestore activo (proyecto: ${firebaseConfig.projectId})`;
   }catch(e){
     console.error(e);
     $('#firebase-status')?.textContent = 'Error activando Firestore';
+    setFbDot(false, 'Error activando Firestore');
   }
 }
+
 
 // Escritura con reintento manual
 async function syncWrite(collectionName, key, data){
@@ -155,6 +157,39 @@ async function syncWrite(collectionName, key, data){
     setFbDot(false);
   }
 }
+
+// ---- Carga robusta de configuración Firebase ----
+function loadFirebaseConfig() {
+  // 1) localStorage tiene prioridad
+  try {
+    const txt = localStorage.getItem('firebaseConfig');
+    if (txt) return JSON.parse(txt);
+  } catch {}
+
+  // 2) Bloque embebido en index.html
+  try {
+    const tag = document.getElementById('fb-config');
+    if (tag && tag.textContent.trim()) {
+      return JSON.parse(tag.textContent);
+    }
+  } catch {}
+
+  return null; // sin config
+}
+
+// Si no hay config en localStorage pero sí en el bloque embebido,
+// la copiamos una vez para que quede persistente.
+(function seedFirebaseConfig() {
+  try {
+    if (!localStorage.getItem('firebaseConfig')) {
+      const tag = document.getElementById('fb-config');
+      if (tag && tag.textContent.trim()) {
+        localStorage.setItem('firebaseConfig', tag.textContent);
+      }
+    }
+  } catch {}
+})();
+
 
 // Reenvío masivo
 async function resendStore(storeName, collectionName, keyField){
