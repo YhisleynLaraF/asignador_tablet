@@ -295,7 +295,19 @@
     </section>
   </main>
 
-  <!-- App (versionado para saltar caché) -->
+  <!-- Config Firebase embebida (fallback). Se usa si no hay nada en localStorage -->
+  <script type="application/json" id="fb-config">
+  {
+    "apiKey": "AIzaSyBOoHRADT4yOCpytPvcyHcaWSB1pT2ZB8I",
+    "authDomain": "asignadortablet.firebaseapp.com",
+    "projectId": "asignadortablet",
+    "storageBucket": "asignadortablet.firebasestorage.app",
+    "messagingSenderId": "261128444351",
+    "appId": "1:261128444351:web:996b8a3171da8d20f6e90a",
+     "measurementId": "G-5F1JBEVC5S"
+  }
+  </script>
+
   <script type="module" src="./app.js?v=2025-11-10-1"></script>
 
   <!-- Debug opcional (guardado para que no rompa si aún no hay App) -->
