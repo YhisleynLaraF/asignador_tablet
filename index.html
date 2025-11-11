@@ -64,6 +64,18 @@
         <button class="tab" onclick="showSection('sec-sims', this)">SIMs</button>
         <button class="tab" onclick="showSection('sec-ajustes', this)">Ajustes</button>
       </nav>
+      <!-- Config Firebase embebida (fallback) -->
+      <script type="application/json" id="fb-config">
+      {
+        "apiKey": "AIzaSyBOoHRADT4yOCpytPvcyHcaWSB1pT2ZB8I",
+        "authDomain": "asignadortablet.firebaseapp.com",
+        "projectId": "asignadortablet",
+        "storageBucket": "asignadortablet.firebasestorage.app",
+        "messagingSenderId": "261128444351",
+        "appId": "1:261128444351:web:996b8a3171da8d20f6e90a"
+      }
+      </script>
+
       <script>
         function showSection(id, btn){
           // mostrar sección
@@ -308,7 +320,8 @@
   }
   </script>
 
-  <script type="module" src="./app.js?v=2025-11-10-1"></script>
+  <script type="module" src="./app.js?v=hotfix-2025-11-11"></script>
+
 
   <!-- Debug opcional (guardado para que no rompa si aún no hay App) -->
   <script type="module">
@@ -341,11 +354,12 @@
   </script>
 
   <!-- SW solo en https o localhost -->
-  <script>
-    if ((location.protocol === 'https:' || location.hostname === 'localhost') && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(console.error);
-    }
-  </script>
+<script>
+  if (false && (location.protocol === 'https:' || location.hostname === 'localhost') && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(console.error);
+  }
+</script>
+
 
   <!-- “Kill switch” para limpiar cachés rápido -->
   <script>
