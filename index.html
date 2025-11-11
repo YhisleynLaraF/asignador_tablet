@@ -57,6 +57,39 @@
         <span id="fb-dot" class="dot" title="Firestore: desconectado"></span>
       </h1>
       <nav id="tabs"></nav>
+      <script>
+  // Fallback de pestañas: si el nav está vacío, lo construimos y lo hacemos funcionar
+  (function () {
+    const NAV_ID = 'tabs';
+    const sections = [
+      { id:'sec-asignar',     label:'Asignar' },
+      { id:'sec-tablets',     label:'Tablets' },
+      { id:'sec-conductores', label:'Conductores' },
+      { id:'sec-vehiculos',   label:'Vehículos' },
+      { id:'sec-sims',        label:'SIMs' },
+      { id:'sec-ajustes',     label:'Ajustes' },
+    ];
+    const nav = document.getElementById(NAV_ID);
+    if (!nav) return;
+
+    // Solo si está vacío (para no chocar con buildTabs())
+    if (nav.children.length === 0) {
+      nav.innerHTML = sections.map((s, i) =>
+        `<button class="tab${i===0?' active':''}" data-target="${s.id}">${s.label}</button>`
+      ).join('');
+    }
+
+    // Delegación de eventos para cambiar de sección
+    nav.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-target]');
+      if (!btn) return;
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(btn.dataset.target)?.classList.add('active');
+    });
+  })();
+</script>
     </div>
   </header>
 
