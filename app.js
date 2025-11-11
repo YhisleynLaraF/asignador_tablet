@@ -6,6 +6,8 @@ function setTextById(id, txt) {
   if (el) el.textContent = txt;
 }
 
+
+//no funca 
 const $  = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
 const nowISO = () => new Date().toISOString();
