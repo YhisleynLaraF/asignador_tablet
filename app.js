@@ -1,6 +1,10 @@
 // ==========================
 // app.js — lógica de la app
 // ==========================
+function setTextById(id, txt) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = txt;
+}
 
 const $  = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
@@ -153,7 +157,7 @@ async function enableFirebase(){
 
     USE_FIREBASE = true;
     setFbDot(true, `Firestore activo (${cfg.projectId})`);
-    document.getElementById('firebase-status')?.textContent = `Firestore activo (${cfg.projectId})`;
+    setTextById('firebase-status', `Firestore activo (proyecto: ${cfg.projectId})`);
 
     await pingFirestore();
     setInterval(pingFirestore, 15000);
