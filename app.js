@@ -81,114 +81,114 @@ const put    = (store,obj)=> new Promise((res,rej)=>{ const r=tx(store,'readwrit
 const del    = (store,key)=> new Promise((res,rej)=>{ const r=tx(store,'readwrite').delete(key); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error);});
 
 // ---------- Firestore ONLINE ----------
-import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+/*import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getFirestore, collection as coll, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";*/
 
+// ---------- Firestore (ONLINE, robusto) ----------
 let USE_FIREBASE = false;
 let fbApp = null, auth = null, fs = null;
-
 let FB_CONNECTED = false;
+
 function setFbDot(ok, msg=""){
   const dot = document.getElementById('fb-dot');
   const lbl = document.getElementById('firebase-status');
   FB_CONNECTED = !!ok;
-  if(dot){
+  if (dot){
     dot.classList.toggle('ok', ok);
     dot.classList.toggle('bad', !ok);
     dot.title = ok ? "Firestore: conectado" : "Firestore: desconectado";
   }
-  if(lbl && msg) lbl.textContent = msg;
+  if (lbl && msg) lbl.textContent = msg;
 }
+
+function loadFirebaseConfig(){
+  try {
+    const txt = localStorage.getItem('firebaseConfig');
+    if (txt) return JSON.parse(txt);
+  } catch {}
+  try {
+    const tag = document.getElementById('fb-config');
+    if (tag && tag.textContent.trim()) return JSON.parse(tag.textContent);
+  } catch {}
+  return null;
+}
+
+// Copia la config embebida a localStorage la primera vez (para persistir)
+(function seedFirebaseConfig(){
+  try {
+    if (!localStorage.getItem('firebaseConfig')) {
+      const tag = document.getElementById('fb-config');
+      if (tag && tag.textContent.trim()) localStorage.setItem('firebaseConfig', tag.textContent);
+    }
+  } catch {}
+})();
 
 async function pingFirestore(){
   if(!USE_FIREBASE){ setFbDot(false, "Firestore OFF"); return; }
   try{
-    const { getDocFromServer, doc, collection: coll } =
-      await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
-    await getDocFromServer(doc(coll(fs, "__health"), "ping"));
+    const fsMod = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
+    await fsMod.getDocFromServer(fsMod.doc(fsMod.collection(fs, "__health"), "ping"));
     setFbDot(true);
   }catch{
     setFbDot(false);
   }
 }
+
 window.addEventListener('online',  ()=> pingFirestore());
 window.addEventListener('offline', ()=> setFbDot(false));
 
 async function enableFirebase(){
   try{
     const cfg = loadFirebaseConfig();
-    if (!cfg) {
-      setFbDot(false, 'Sin configuración Firebase');
-      $('#firebase-status')?.textContent = 'Sin configuración Firebase';
-      return;
-    }
+    if (!cfg){ setFbDot(false, 'Sin configuración Firebase'); return; }
 
-    fbApp = getApps().length ? getApp() : initializeApp(cfg);
-    fs = getFirestore(fbApp);
-    auth = getAuth(fbApp);
-    try { await signInAnonymously(auth); } catch(e) { /* seguimos si las reglas lo permiten */ }
+    const appMod = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js');
+    const authMod= await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js');
+    const fsMod  = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
+
+    fbApp = appMod.getApps().length ? appMod.getApp() : appMod.initializeApp(cfg);
+    fs    = fsMod.getFirestore(fbApp);
+    try { await authMod.signInAnonymously(authMod.getAuth(fbApp)); } catch(_){ /* seguimos igual */ }
 
     USE_FIREBASE = true;
-    setFbDot(true, `Firestore activo (proyecto: ${cfg.projectId})`);
-    $('#firebase-status')?.textContent = `Firestore activo (proyecto: ${cfg.projectId})`;
+    setFbDot(true, `Firestore activo (${cfg.projectId})`);
+    document.getElementById('firebase-status')?.textContent = `Firestore activo (${cfg.projectId})`;
 
-    pingFirestore();
+    await pingFirestore();
     setInterval(pingFirestore, 15000);
   }catch(e){
-    console.error(e);
-    $('#firebase-status')?.textContent = 'Error activando Firestore';
-    setFbDot(false, 'Error activando Firestore');
+    console.error('enableFirebase', e);
+    setFbDot(false, e.message || 'Error Firestore');
   }
 }
 
-
-// Escritura con reintento manual
 async function syncWrite(collectionName, key, data){
-  if(!USE_FIREBASE){ console.warn("Firestore OFF"); return; }
+  if(!USE_FIREBASE) return;
   try{
     const { collection: coll, doc, setDoc } =
       await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
     await setDoc(doc(coll(fs, collectionName), key), data, { merge:true });
-    console.log(`Firestore OK → ${collectionName}/${key}`);
   }catch(e){
-    console.error("Firestore ERR:", e);
-    alert("Error Firestore: " + (e.code || e.message));
+    console.error('syncWrite', e);
     setFbDot(false);
   }
 }
 
-// ---- Carga robusta de configuración Firebase ----
-function loadFirebaseConfig() {
-  // 1) localStorage tiene prioridad
-  try {
-    const txt = localStorage.getItem('firebaseConfig');
-    if (txt) return JSON.parse(txt);
-  } catch {}
-
-  // 2) Bloque embebido en index.html
-  try {
-    const tag = document.getElementById('fb-config');
-    if (tag && tag.textContent.trim()) {
-      return JSON.parse(tag.textContent);
-    }
-  } catch {}
-
-  return null; // sin config
+async function resendStore(storeName, collectionName, keyField){
+  if(!USE_FIREBASE){ alert('Firestore no está activo'); return; }
+  const items = await getAll(storeName);
+  const { collection: coll, doc, setDoc } =
+    await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
+  let ok=0, fail=0;
+  for (const it of items){
+    const key = it[keyField]; if(!key) continue;
+    try { await setDoc(doc(coll(fs, collectionName), key), it, { merge:true }); ok++; }
+    catch { fail++; }
+  }
+  alert(`Reenvío ${collectionName}: OK ${ok}, errores ${fail}`);
 }
 
-// Si no hay config en localStorage pero sí en el bloque embebido,
-// la copiamos una vez para que quede persistente.
-(function seedFirebaseConfig() {
-  try {
-    if (!localStorage.getItem('firebaseConfig')) {
-      const tag = document.getElementById('fb-config');
-      if (tag && tag.textContent.trim()) {
-        localStorage.setItem('firebaseConfig', tag.textContent);
-      }
-    }
-  } catch {}
-})();
 
 
 // Reenvío masivo
@@ -461,7 +461,8 @@ document.getElementById('btn-activar-firebase')?.addEventListener('click', ()=> 
   await Promise.all([renderTablets(), renderConductores(), renderVehiculos(), renderSims(), renderAsignaciones()]);
   await refreshMasterSelects();
   $('#sim-block').style.display = ($('#asig-red').value==='SIM') ? 'grid' : 'none';
-  await enableFirebase(); // online por defecto
-  pingFirestore();
-  setInterval(pingFirestore, 15000);
+
+  // Activa Firestore sin bloquear la app si falla
+  enableFirebase().catch(()=>{});
 })();
+
