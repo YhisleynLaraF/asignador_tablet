@@ -43,8 +43,9 @@
     .section{display:none}
     .section.active{display:block}
     .danger{color:#fecaca}
+    /* Luz Firestore */
     .dot{display:inline-block;width:10px;height:10px;border-radius:999px;margin-left:8px;background:#7f1d1d;box-shadow:0 0 0 2px #1e293b}
-    .dot.ok{background:#10b981}   
+    .dot.ok{background:#10b981}
     .dot.bad{background:#ef4444}
   </style>
 </head>
@@ -58,9 +59,9 @@
       <nav id="tabs"></nav>
     </div>
   </header>
-  <main class="wrap">
 
-    <!-- Tabs / Secciones -->
+  <main class="wrap">
+    <!-- Sección ASIGNAR -->
     <section id="sec-asignar" class="section active">
       <div class="grid grid-2">
         <div class="card">
@@ -117,8 +118,9 @@
             </div>
           </div>
         </div>
+
         <div class="card">
-         <div class="toolbar">
+          <div class="toolbar">
             <h2 style="margin-right:auto">Asignaciones activas</h2>
             <input id="filtro" placeholder="Buscar patente/IMEI/RUT" />
             <button id="btn-export" class="btn">⬇ Exportar CSV</button>
@@ -128,26 +130,20 @@
             <table id="tabla-asignaciones">
               <thead>
                 <tr>
-                  <th>Fecha</th>
-                  <th>Patente</th>
-                  <th>Sigla</th>
-                  <th>Tablet IMEI</th>
-                  <th>Red</th>
-                  <th>SIM</th>
-                  <th>Conductor</th>
-                  <th>Estado</th>
-                  <th>Obs.</th>
-                  <th>Acciones</th>
+                  <th>Fecha</th><th>Patente</th><th>Sigla</th><th>Tablet IMEI</th>
+                  <th>Red</th><th>SIM</th><th>Conductor</th><th>Estado</th><th>Obs.</th><th>Acciones</th>
                 </tr>
               </thead>
               <tbody></tbody>
             </table>
           </div>
         </div>
+
       </div>
       <div class="sticky-footer hint">Tip: usa el buscador para encontrar rápido por Patente, Sigla, IMEI, RUT o Nombre.</div>
     </section>
 
+    <!-- Tablets -->
     <section id="sec-tablets" class="section">
       <div class="grid grid-2">
         <div class="card">
@@ -160,14 +156,8 @@
               </div>
               <button id="scan-tab-master" class="btn outline scan-btn">📷 Escanear</button>
             </div>
-            <div>
-              <label>Modelo</label>
-              <input id="tab-modelo" placeholder="SM-X115 / Galaxy Active 5 / …" />
-            </div>
-            <div>
-              <label>Nota</label>
-              <input id="tab-nota" placeholder="Opcional" />
-            </div>
+            <div><label>Modelo</label><input id="tab-modelo" placeholder="SM-X115 / Galaxy Active 5 / …" /></div>
+            <div><label>Nota</label><input id="tab-nota" placeholder="Opcional" /></div>
             <button id="btn-add-tablet" class="btn primary">Agregar</button>
           </div>
         </div>
@@ -177,50 +167,45 @@
             <input id="filtro-tablets" placeholder="Buscar IMEI/Modelo" />
             <button id="sync-tablets" class="btn">⤴ Reenviar a Firestore</button>
           </div>
-          <div style="overflow:auto"><table id="tabla-tablets"><thead><tr><th>IMEI</th><th>Modelo</th><th>Estado</th><th>Nota</th><th></th></tr></thead><tbody></tbody></table></div>
+          <div style="overflow:auto">
+            <table id="tabla-tablets"><thead><tr><th>IMEI</th><th>Modelo</th><th>Estado</th><th>Nota</th><th></th></tr></thead><tbody></tbody></table>
+          </div>
         </div>
       </div>
     </section>
 
+    <!-- Conductores -->
     <section id="sec-conductores" class="section">
       <div class="grid grid-2">
         <div class="card">
           <h2>Registrar Conductor</h2>
           <div class="grid">
-            <div>
-              <label>RUT</label>
-              <input id="con-rut" placeholder="12.345.678-9" />
-            </div>
-            <div>
-              <label>Nombre</label>
-              <input id="con-nombre" placeholder="Nombre Apellido" />
-            </div>
+            <div><label>RUT</label><input id="con-rut" placeholder="12.345.678-9" /></div>
+            <div><label>Nombre</label><input id="con-nombre" placeholder="Nombre Apellido" /></div>
             <button id="btn-add-conductor" class="btn primary">Agregar</button>
           </div>
         </div>
         <div class="card">
           <h2>Conductores</h2>
-          <div class="toolbar"><input id="filtro-conductores" placeholder="Buscar RUT/Nombre" />
+          <div class="toolbar">
+            <input id="filtro-conductores" placeholder="Buscar RUT/Nombre" />
             <button id="sync-conductores" class="btn">⤴ Reenviar</button>
           </div>
-          <div style="overflow:auto"><table id="tabla-conductores"><thead><tr><th>RUT</th><th>Nombre</th><th></th></tr></thead><tbody></tbody></table></div>
+          <div style="overflow:auto">
+            <table id="tabla-conductores"><thead><tr><th>RUT</th><th>Nombre</th><th></th></tr></thead><tbody></tbody></table>
+          </div>
         </div>
       </div>
     </section>
 
+    <!-- Vehículos -->
     <section id="sec-vehiculos" class="section">
       <div class="grid grid-2">
         <div class="card">
           <h2>Registrar Vehículo</h2>
           <div class="grid">
-            <div>
-              <label>Patente</label>
-              <input id="veh-patente" placeholder="GVXX23" />
-            </div>
-            <div>
-              <label>Sigla</label>
-              <input id="veh-sigla" placeholder="TM208" />
-            </div>
+            <div><label>Patente</label><input id="veh-patente" placeholder="GVXX23" /></div>
+            <div><label>Sigla</label><input id="veh-sigla" placeholder="TM208" /></div>
             <button id="btn-add-veh" class="btn primary">Agregar</button>
           </div>
         </div>
@@ -230,11 +215,14 @@
             <input id="filtro-vehiculos" placeholder="Buscar Patente/Sigla" />
             <button id="sync-vehiculos" class="btn">⤴ Reenviar</button>
           </div>
-          <div style="overflow:auto"><table id="tabla-vehiculos"><thead><tr><th>Patente</th><th>Sigla</th><th></th></tr></thead><tbody></tbody></table></div>
+          <div style="overflow:auto">
+            <table id="tabla-vehiculos"><thead><tr><th>Patente</th><th>Sigla</th><th></th></tr></thead><tbody></tbody></table>
+          </div>
         </div>
       </div>
     </section>
 
+    <!-- SIMs -->
     <section id="sec-sims" class="section">
       <div class="grid grid-2">
         <div class="card">
@@ -247,14 +235,8 @@
               </div>
               <button id="scan-sim-master" class="btn outline scan-btn">📷 Escanear</button>
             </div>
-            <div>
-              <label>ICCID</label>
-              <input id="sim-iccid" placeholder="19-22 dígitos" inputmode="numeric" />
-            </div>
-            <div>
-              <label>IMEI SIM (opcional)</label>
-              <input id="sim-imei" placeholder="Si aplica" inputmode="numeric" />
-            </div>
+            <div><label>ICCID</label><input id="sim-iccid" placeholder="19-22 dígitos" inputmode="numeric" /></div>
+            <div><label>IMEI SIM (opcional)</label><input id="sim-imei" placeholder="Si aplica" inputmode="numeric" /></div>
             <button id="btn-add-sim" class="btn primary">Agregar</button>
           </div>
         </div>
@@ -264,11 +246,14 @@
             <input id="filtro-sims" placeholder="Buscar Número/ICCID" />
             <button id="sync-sims" class="btn">⤴ Reenviar</button>
           </div>
-          <div style="overflow:auto"><table id="tabla-sims"><thead><tr><th>Número</th><th>ICCID</th><th>IMEI SIM</th><th></th></tr></thead><tbody></tbody></table></div>
+          <div style="overflow:auto">
+            <table id="tabla-sims"><thead><tr><th>Número</th><th>ICCID</th><th>IMEI SIM</th><th></th></tr></thead><tbody></tbody></table>
+          </div>
         </div>
       </div>
     </section>
 
+    <!-- Ajustes -->
     <section id="sec-ajustes" class="section">
       <div class="card">
         <h2>Ajustes</h2>
@@ -288,49 +273,63 @@
         <p>Versión 1.0 · Local-first · Sin frameworks · Hecho para operar en terreno.</p>
       </div>
     </section>
-
   </main>
 
-  <!-- Tu app -->
-  <script type="module" src="./app.js"></script>
+  <!-- App (versionado para saltar caché) -->
+  <script type="module" src="./app.js?v=2025-11-10-1"></script>
+
+  <!-- Debug opcional (guardado para que no rompa si aún no hay App) -->
   <script type="module">
-  import { getApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getFirestore, collection, doc, setDoc, serverTimestamp }
-    from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    import { getApp, getApps } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getFirestore, collection, doc, setDoc, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-  const fs = getFirestore(getApp());
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      `<div style="margin:16px">
+         <button id="dbg-write" class="btn">TEST FIRESTORE</button>
+         <span id="dbg-out" class="hint"></span>
+       </div>`
+    );
 
-  // UI de debug
-  document.body.insertAdjacentHTML(
-    "beforeend",
-    `<div style="margin:16px">
-       <button id="dbg-write" class="btn">TEST FIRESTORE</button>
-       <span id="dbg-out" class="hint"></span>
-     </div>`
-  );
+    document.getElementById("dbg-write").onclick = async () => {
+      const out = document.getElementById("dbg-out");
+      try {
+        const app = getApps().length ? getApp() : null;
+        if (!app){ out.textContent = "⚠️ Inicializa Firestore primero."; return; }
+        const fs = getFirestore(app);
+        out.textContent = "Escribiendo…";
+        await setDoc(doc(collection(fs,"pruebas"),"ping"), {ok:true, ts:serverTimestamp()}, {merge:true});
+        out.textContent = "✅ OK. Revisa colección 'pruebas'.";
+      } catch (e) {
+        out.textContent = "❌ " + (e.code || e.message);
+        console.error(e);
+      }
+    };
+  </script>
 
-  document.getElementById("dbg-write").onclick = async () => {
-    const out = document.getElementById("dbg-out");
-    out.textContent = "Escribiendo…";
-    try {
-      await setDoc(doc(collection(fs, "pruebas"), "ping"), {
-        ok: true, fuente: "debug", ts: serverTimestamp()
-      }, { merge: true });
-      out.textContent = "✅ OK. Revisa colección 'pruebas' en Firestore.";
-    } catch (e) {
-      out.textContent = "❌ " + (e.code || e.message);
-      console.error(e);
-    }
-  };
-</script>
-
-
-  
   <!-- SW solo en https o localhost -->
   <script>
     if ((location.protocol === 'https:' || location.hostname === 'localhost') && 'serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(console.error);
     }
+  </script>
+
+  <!-- “Kill switch” para limpiar cachés rápido -->
+  <script>
+    (async () => {
+      const p = new URLSearchParams(location.search);
+      if (p.has('no-sw') && 'serviceWorker' in navigator) {
+        try {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          for (const r of regs) await r.unregister();
+          if (window.caches) { for (const k of await caches.keys()) await caches.delete(k); }
+          localStorage.clear(); sessionStorage.clear();
+        } finally {
+          location.replace(location.pathname);
+        }
+      }
+    })();
   </script>
 </body>
 </html>
