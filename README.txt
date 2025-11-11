@@ -16,3 +16,4 @@ Notas:
 - Todo funciona offline gracias a IndexedDB.
 - Para multiusuario, pega tu config de Firebase en Ajustes y pulsa “Activar Firestore”.
 - Exporta CSV desde la pestaña Asignar.
+hola
